@@ -1,0 +1,5 @@
+.vscode
+twitter_env
+secrets.py
+
+__pycache__
