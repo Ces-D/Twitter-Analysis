@@ -19,10 +19,26 @@ class API:
                              signature_type='auth_header')
         return oath
     
-    def protected_url(self):
+    def stringify(self,id):
+        if type(id) =='str':
+            return id
+        else:
+            return str(id)
+
+    def user_id(self):
         protected_url = 'https://api.twitter.com/1.1/account/verify_credentials.json'
         oauth = self.authenticate()
         r = oauth.get(protected_url)
-        print(r.json())
+        r_json = r.json()
+        return r_json['id']
     
-
+    def post_date(self,id):
+        str_id = self.stringify(id)
+        protected_url = f'https://api.twitter.com/2/tweets/{str_id}'
+        oauth = self.authenticate()
+        parameters = {
+            'expansions': 'entities.mentions.username',
+            'tweet.fields': 'created_at,entities,non_public_metrics,public_metrics,text'
+        }
+        r = oauth.get(protected_url, params=parameters)
+        return r.json()
