@@ -88,7 +88,7 @@ class API:
         cleaned_all_posts = [[post.get('id'), post.get('created_at')] for post in all_posts]
 
         with open('Account_PostsID.csv',
-                  'w') as file:  # write the IDs to a CSV
+                  'w', encoding='utf-8') as file:  # write the IDs to a CSV
             writer = csv.writer(file)
             writer.writerow(["PostID","Created At"])
             writer.writerows(post for post in cleaned_all_posts)
@@ -96,26 +96,9 @@ class API:
         pass
 
 
-    def post_data(self, post_id):
-        """
-        "reference: https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
-        """
-        str_id = self.stringify(id)
-        protected_url = f'https://api.twitter.com/2/tweets/{str_id}'
-        oauth = self.authenticate()
-        parameters = {
-            'expansions':
-            'entities.mentions.username',
-            'tweet.fields':
-            'created_at,entities,non_public_metrics,organic_metrics,public_metrics,text'
-        }
-        r = oauth.get(protected_url, params=parameters)
-        return r.json()
-
-
     def all_post_ids(self):
         if os.path.exists('Account_PostsID.csv'):  # if files exists
-            with open('Account_PostsID.csv', 'r') as file:
+            with open('Account_PostsID.csv', 'r', encoding='utf-8') as file:
                 reader = csv.reader(file)
                 all_post_ids = [row for row in reader]
                 print(f'Your IDs file has {len(all_post_ids)} rows')
@@ -126,22 +109,31 @@ class API:
         pass
 
 
+    def post_data(self, post_id):
+        """
+        "reference: https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
+        """
+        str_id = self.stringify(post_id)
+        protected_url = f'https://api.twitter.com/2/tweets/{str_id}'
+        oauth = self.authenticate()
+        parameters = {
+            'expansions':
+            'entities.mentions.username',
+            'tweet.fields':
+            'created_at,entities,non_public_metrics,organic_metrics,public_metrics,text'
+        }
+        r = oauth.get(protected_url, params=parameters)
+        print(f'Status for {str_id} is:{r}')
+        return r.json()
+
+
     def test_post_data(self):
         post_ids = self.all_post_ids()
         all_post_data = []
-        for post_id in post_ids[:3]:    #TODO: 'NoneType' object is not subscriptable
-            post_data = self.post_data(post_id[0])  # self.allpost_ids returns a list of id and created_at
-            all_post_data.extend(post_data)
+        post_id = post_ids[2]   
+        post_data = self.post_data(post_id)  # self.all_post_ids returns a list of id and created_at
+        all_post_data.append(post_data)
 
-        print(all_post_data)
+        print(f'Resulting list: {all_post_data}')
         pass
 
-
-    def all_post_data(self):
-        post_ids = self.all_post_ids
-        all_post_data = []
-        for post_id in post_ids:
-            post_data = self.post_data(post_id[0])  #  self.allpost_ids returns a list of id and created_at
-            all_post_data.extend(post_data)
-        
-        pass

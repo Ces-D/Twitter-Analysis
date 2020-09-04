@@ -11,4 +11,8 @@ from secrets import *
 twitter = API(consumer_key, consumer_secret, access_token, access_token_secret)
 
 
-test = twitter.test_post_data()
+#test = twitter.test_post_data()
+
+test_post_id = twitter.post_data(1301539994008518656)
+print(test_post_id) # if post type is a retweet, the typical metrics cannot be matched
+# should create checker for retweets
