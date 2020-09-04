@@ -1,4 +1,3 @@
-from twitter import UserPosts
 from twitterapi import API
 from secrets import *
 
@@ -11,8 +10,5 @@ from secrets import *
 
 twitter = API(consumer_key, consumer_secret, access_token, access_token_secret)
 
-test = twitter.user_id()
 
-post_data = twitter.post_date(1301188765440970765)
-
-print(post_data)
+test = twitter.test_post_data()
