@@ -2,6 +2,7 @@ import requests
 from requests_oauthlib import OAuth1Session
 import csv
 import os
+import json
 
 
 class API:
@@ -108,6 +109,24 @@ class API:
         self.all_post_ids()  # run again to check condition
         pass
 
+    
+    def simple_parameters(self):
+        parameters = {
+            'expansions': 'entities.mentions.username',
+            'tweet.fields': 'created_at,text,public_metrics'
+        }
+        return parameters
+
+
+    def detailed_parameters(self):
+        parameters = {
+            'expansions':
+            'entities.mentions.username',
+            'tweet.fields':
+            'created_at,entities,non_public_metrics,organic_metrics,public_metrics,text'
+        }
+        return parameters
+
 
     def post_data(self, post_id):
         """
@@ -116,24 +135,41 @@ class API:
         str_id = self.stringify(post_id)
         protected_url = f'https://api.twitter.com/2/tweets/{str_id}'
         oauth = self.authenticate()
-        parameters = {
-            'expansions':
-            'entities.mentions.username',
-            'tweet.fields':
-            'created_at,entities,non_public_metrics,organic_metrics,public_metrics,text'
-        }
+        
+        parameters = self.detailed_parameters()
         r = oauth.get(protected_url, params=parameters)
-        print(f'Status for {str_id} is:{r}')
-        return r.json()
 
+        if r.json().get('errors') is not None:  #Yes Errors exists
+            print('Post is Simple')
+            parameters = self.simple_parameters()
+            r = oauth.get(protected_url, params=parameters)
+            print(f'Status for Retweet {str_id}: {r.status_code}')
+            return r.json()
 
-    def test_post_data(self):
+        print(f'Status for Post {str_id}: {r.status_code}')
+        return r.json()        
+
+        
+
+    def all_post_data(self):
         post_ids = self.all_post_ids()
         all_post_data = []
-        post_id = post_ids[2]   
-        post_data = self.post_data(post_id)  # self.all_post_ids returns a list of id and created_at
-        all_post_data.append(post_data)
+        for post_id in post_ids[937:945]:   # change this to iterate through partial list
+            
+            if post_id == [] or None:
+                continue
+            print(f'Grabbing data for: {post_id[0]}')
+            post_data = self.post_data(post_id[0])  # self.all_post_ids returns a list of id and created_at
+            all_post_data.append(post_data)
 
-        print(f'Resulting list: {all_post_data}')
+        print(f'Resulting list: {len(all_post_data)}')
+        print(all_post_data)
+
+        return all_post_data
+
+    
+    def data_file(self):
         pass
 
+
+    
