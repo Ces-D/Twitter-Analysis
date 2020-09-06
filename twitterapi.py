@@ -3,6 +3,7 @@ from requests_oauthlib import OAuth1Session
 import csv
 import os
 import json
+import time
 
 
 class API:
@@ -162,7 +163,7 @@ class API:
             # check and handle rate limit
             request_count += 1
             if request_count % 300 == 0:
-                os.sleep(900)
+                time.sleep(900)
 
             print(f'Grabbing data for: {post_id[0]}')
             # self.all_post_ids returns a list of id and created_at
