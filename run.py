@@ -21,4 +21,4 @@ twitter = API(consumer_key, consumer_secret, access_token, access_token_secret)
 #print(test_post_data) # if post type is a retweet, the typical metrics cannot be matched
 
 
-data = twitter.data_file()
+data = twitter.data_file(start_index=1, end_index=644)

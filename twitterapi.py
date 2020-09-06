@@ -38,7 +38,7 @@ class API:
         """        
         :reference: https://developer.twitter.com/en/docs/twitter-api/v1/tweets/timelines/api-reference/get-statuses-user_timeline
         """
-        
+
         protected_url = 'https://api.twitter.com/1.1/statuses/user_timeline.json'
         oauth = self.authenticate()
         user_id = self.user_id
@@ -91,11 +91,12 @@ class API:
         cleaned_all_posts = [[post.get('id'),
                               post.get('created_at')] for post in all_posts]
 
-        with open('Account_PostsID.csv', 'w',
-                  encoding='utf-8') as file:  # write the IDs to a CSV
+        with open('Account_PostsID.csv', 'w', encoding='utf-8',
+                  newline='') as file:  # write the IDs to a CSV
             writer = csv.writer(file)
             writer.writerow(["PostID", "Created At"])
-            writer.writerows(post for post in cleaned_all_posts)
+            for post in cleaned_all_posts:
+                writer.writerow(post)
 
         pass
 
@@ -131,8 +132,8 @@ class API:
         """
         "reference: https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
         """
-        str_id = self.stringify(post_id)
-        protected_url = f'https://api.twitter.com/2/tweets/{str_id}'
+        protected_url = f'https://api.twitter.com/2/tweets/{post_id}'
+        print(protected_url)
         oauth = self.authenticate()
 
         parameters = self.detailed_parameters()
@@ -142,10 +143,10 @@ class API:
             print('Post is Simple')
             parameters = self.simple_parameters()
             r = oauth.get(protected_url, params=parameters)
-            print(f'Status for Retweet {str_id}: {r.status_code}')
+            print(f'Status for Retweet {post_id}: {r.status_code}')
             return r.json()
 
-        print(f'Status for Post {str_id}: {r.status_code}')
+        print(f'Status for Post {post_id}: {r.status_code}')
         return r.json()
 
     def all_post_data(self, start_index=1, end_index=5):
@@ -154,12 +155,14 @@ class API:
         """
         post_ids = self.all_post_ids()
         all_post_data = []
-
+        request_count = 0
         # change this to iterate through partial list
         for post_id in post_ids[start_index:end_index]:
 
-            if post_id == [] or None:
-                continue
+            # check and handle rate limit
+            request_count += 1
+            if request_count % 300 == 0:
+                os.sleep(900)
 
             print(f'Grabbing data for: {post_id[0]}')
             # self.all_post_ids returns a list of id and created_at
