@@ -149,12 +149,11 @@ class API:
         print(f'Status for Post {str_id}: {r.status_code}')
         return r.json()        
 
-        
 
-    def all_post_data(self):
+    def all_post_data(self,start_index=1, end_index=5):
         post_ids = self.all_post_ids()
         all_post_data = []
-        for post_id in post_ids[937:945]:   # change this to iterate through partial list
+        for post_id in post_ids[start_index:end_index]:   # change this to iterate through partial list
             
             if post_id == [] or None:
                 continue
@@ -163,13 +162,13 @@ class API:
             all_post_data.append(post_data)
 
         print(f'Resulting list: {len(all_post_data)}')
-        print(all_post_data)
 
         return all_post_data
 
     
-    def data_file(self):
+    def data_file(self, start_index=1, end_index=5):
+        data = self.all_post_data(start_index, end_index)
+        json_data = json.dumps(data, indent=4)
+        with open('Post_Data.json', 'w') as f:
+            f.write(json_data)
         pass
-
-
-    

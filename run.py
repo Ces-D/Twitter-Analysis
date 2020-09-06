@@ -11,13 +11,14 @@ from secrets import *
 twitter = API(consumer_key, consumer_secret, access_token, access_token_secret)
 
 
-test = twitter.all_post_data()
-print(test)
+# test = twitter.all_post_data(start_index=700, end_index=731)
+# print(test)
 
 #test_post_ids = twitter.all_post_ids()
 
 
 #test_post_data = twitter.post_data(933341130338590721)
 #print(test_post_data) # if post type is a retweet, the typical metrics cannot be matched
-# non-public metrics cannot be requestsed for tweets older than 30 days
-# function that checks if post is olde than 30
+
+
+data = twitter.data_file()
