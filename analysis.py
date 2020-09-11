@@ -8,6 +8,7 @@ data_frame = pd.read_json((post_data_json['data'].to_json()), orient='index')
 class Post_Frame:
     def __init__(self, dataframe):
         self.df = dataframe
+        self.flat_key_list = None
 
     def dict_keys(self, dictionary):
         dict_keys = list(dictionary.keys())
@@ -61,19 +62,31 @@ class Post_Frame:
         # creates a flat list of all the inner dict keys
         flat_all_keys = set([item for sublist in all_keys for item in sublist])
         # print(flat_all_keys)
-        return list(flat_all_keys)
+        self.flat_key_list = list(flat_all_keys)
+        pass
 
-    def inner_dict_values(self,index):
-        all_keys = self.inner_keys()
+    def inner_dict_values(self, index):
+
         df_series, series_values = self.post_info(index)
+        df_dict = pd.Series.to_dict(df_series)
+        for key in :
 
+        print(df_dict)
+        pass
+
+    def inner_values(self):
+        all_keys = self.inner_keys()
+        # print(all_keys)
         pass
 
     def inner_items(self, index):
         pass
 
     def flat_headers(self):
-        inner_keys = self.inner_keys()
+        if self.flat_key_list is None:
+            inner_keys = self.inner_keys()
+            self.flat_headers
+        inner_keys = self.inner_keys()  
         return inner_keys + ['created_at', 'id', 'text']
 
     def write_dataframe(self):
@@ -92,4 +105,5 @@ A = Post_Frame(data_frame)
 # c = A.flat_headers()
 # d = A.post_id()
 # e = A.inner_dict_keys(1)
-f = A.post_info(2)
+# f = A.post_info(2)
+g = A.inner_dict_values(2)
