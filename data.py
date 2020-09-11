@@ -14,7 +14,7 @@ class CleanPostFrame:
 
     def series_to_dict(self):
         all_dicts = []
-        for i in range(4): # change to len(self.dataframe)
+        for i in range(2): # change to len(self.dataframe)
             post_info = self.post_info(i)
             series_to_dict = pd.Series.to_dict(post_info)
             # print(series_to_dict)
@@ -52,27 +52,42 @@ class CleanPostFrame:
         return inner_keys + ['created_at', 'id', 'text']
 
     def update_dict(self, _dict):
+        check = {}
         flat_headers = self.flat_headers()
-        for k in flat_headers:
+        for header in flat_headers:
             try:
-                value = _dict[k]
+                check[header] = _dict[header]
             except KeyError:
-                _dict[k] = None
-        return _dict
-    
+                check[header] = None
+        return check
+
+    def flat_dict(self, nested_dict):
+        out_dict = {}
+        for key, val in nested_dict.items():
+            if type(val) == dict:
+                out_dict[key] = len(nested_dict.keys())
+                out_dict.update(val)
+            else:
+                out_dict[key] = val
+        return out_dict
+
     def perform_update_dict(self):
         data = []
         for d in self.series_to_dict():
-            update_dict = self.update_dict(d)
+            flat_dict = self.flat_dict(d)
+            update_dict = self.update_dict(flat_dict)
             data.append(update_dict)
         return data
         
     def create_df(self):
         columns = self.flat_headers()
         data = self.perform_update_dict()
-        self.new_df = pd.DataFrame(data, columns=columns)
-        print(self.new_df)
-        pass
+        new_df = pd.DataFrame.from_dict(data)
+        return new_df
+
+    def df_to_csv(self):
+        df = self.create_df()
+        df.to_csv('Cleaned_data.csv')
 
 
 
@@ -83,5 +98,7 @@ if os.path.exists('Post_Data.json'):  # if files exists
     data_frame = pd.read_json((post_data_json['data'].to_json()), orient='index')
 
 t = CleanPostFrame(data_frame)
-a = t.create_df()
+# a = t.create_df()
 # b = t.series_to_dict()
+# c = t.perform_update_dict()
+d = t.df_to_csv()
