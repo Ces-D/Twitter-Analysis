@@ -3,6 +3,9 @@ from requests_oauthlib import OAuth1Session
 import json
 import time
 import pandas as pd
+import itertools
+from secrets import *
+
 
 class Timeline:
     def __init__(self, consumer_key, consumer_secret, access_token,
@@ -13,109 +16,88 @@ class Timeline:
             resource_owner_key=access_token,
             resource_owner_secret=access_token_secret,
             signature_type='auth_header')
-        self.user_id = None
-        self.timeline_id = None
 
-    def user_profile(self):
-        request = self.authenticate.get(
-            url='https://api.twitter.com/1.1/account/verify_credentials.json')
-        request_json = request.json()
-        self.user_id = str(request_json['id'])
-
-    def simple_search_parameters(self):
-        parameters = {
-            'expansions': 'entities.mentions.username',
-            'tweet.fields': 'created_at,text,public_metrics'
-        }
-        return parameters
-
-    def detailed_search_parameters(self):
-        parameters = {
+    def post_data(self, post_id):
+        complex_params = {
             'expansions':
             'entities.mentions.username',
             'tweet.fields':
             'created_at,entities,non_public_metrics,organic_metrics,public_metrics,text'
         }
-        return parameters
-
-    def request_post(self, post_id):
-        url = f'https://api.twitter.com/2/tweets/{post_id}'
-        params = self.detailed_search_parameters()
-        request = self.authenticate.get(url, params=params)
-        if request.json().get('errors') is not None:  #Yes Errors exist
-            params = self.simple_search_parameters()
-            request = self.authenticate.get(url, params=params)
-            print(f'Status for Retweet {post_id}: {request.status_code}')
-            return request.json()
-        print(f'Status for Post {post_id}: {request.status_code}')
-        return request.json()
-
-    def request_timeline(self, max_id=None):
-        """        
-        :reference: https://developer.twitter.com/en/docs/twitter-api/v1/tweets/timelines/api-reference/get-statuses-user_timeline
-        """
-        if self.user_id is None:
-            self.user_profile()
-            self.request_timeline()
-        if max_id is None:
-            params = {'user_id': self.user_id, 'count': 200, 'include_rts': 1}
-        else:
-            params = {
-                'user_id': self.user_id,
-                'count': 200,
-                'include_rts': 1,
-                'max_id': max_id
-            }
-
         request = self.authenticate.get(
-            url='https://api.twitter.com/1.1/statuses/user_timeline.json',
-            params=params)
-        return request.json()
+            url=f'https://api.twitter.com/2/tweets/{post_id}',
+            params=complex_params)
+        if request.json().get('errors') is not None:
+            simple_params = {
+                'expansions': 'entities.mentions.username',
+                'tweet.fields': 'created_at,text,public_metrics'
+            }
+            request = self.authenticate.get(
+                url=f'https://api.twitter.com/2/tweets/{post_id}',
+                params=simple_params)
+            # print(f'Simple:{request.json().get("data")["id"]}')
+            # print(f'Simple:{type(request.json().get("data"))}')
+            return request.json().get("data")
+        # print(f'Complex:{request.json().get("data")["id"]}')
+        # print(f'Complex:{type(request.json().get("data"))}')
+        return request.json().get("data")
 
-    def timeline_ids(self):
-        timeline = []
-        max_id = 0
-        for i in range(2):  # change value to get more inputs max is 32
-            if i == 0:
-                request = self.request_timeline()
-                timeline.append(request)
-                max_id = timeline[0][-1].get('id') - 1
-                continue
-            request = self.request_timeline(max_id=max_id)
-            timeline.append(request)
-            max_id = timeline[0][-1].get('id') - 1
+    def user_timeline(self):
+        loop=0
+        user_timeline=[]
+        params={
+                'count':2, # change to 200 in prod
+                'include_rts':1
+            }
+        i_request= self.authenticate.get(url='https://api.twitter.com/1.1/statuses/user_timeline.json', params=params)
+        # print(f'Initial Request: {i_request.json()}')
+        # print(f'Initial Request Type: {type(i_request.json())}')
+        user_timeline.append(i_request.json())
+        max_id = user_timeline[-1][-1].get('id') - 1
+        for i in range(2): # change to larger for more rounds 
+            params={
+                'count':2, # change to 200 in prod
+                'include_rts':1,
+                'max_id': max_id,
+            }
+            request= self.authenticate.get(url='https://api.twitter.com/1.1/statuses/user_timeline.json', params=params)
+            # print(f'Conseq Request: {request.json()}', '\n\n')
+            user_timeline.append(request.json())
+            max_id = user_timeline[-1][-1].get('id') - 1
+        # print(f'User Timeline: {user_timeline}')
+        # print(f'User Timeline Type: {type(user_timeline)}')
+        # print(f'User Timeline Length: {len(user_timeline)}')
+        return user_timeline
 
-        timeline_ids=[]
-        for l in timeline:
-            for d in l:
-                timeline_ids.append(d.get('id'))
-        self.timeline_id = timeline_ids
+    def user_timeline_ids(self):
+        user_timeline = self.user_timeline()
+        f_user_timeline = list(itertools.chain.from_iterable(user_timeline)) #flatten list of lists
+        timeline_post_ids = [post.get('id') for post in f_user_timeline]
+        # print(f'Flat List Length: {len(f_user_timeline)}')
+        # print(f'Flat List: {f_user_timeline}')
+        # print(f'Timeline Post Ids: {timeline_post_ids}')
+        return timeline_post_ids
 
-    def timeline_posts(self):
-        posts = []
-        request_count = 0
-        if self.timeline_id is None:
-            self.timeline_ids()
-            self.timeline_posts()
-        for post_id in self.timeline_id:
-            request_count += 1
-            if request_count % 300 == 0:
-                time.sleep(900)
-            request = self.request_post(post_id)
-            posts.extend(request)
-        return posts
-        
+    def timeline_post_data(self):
+        user_timeline_ids = self.user_timeline_ids()
+        timeline_post_data = []
+        for timeline_id in user_timeline_ids:
+            timeline_post_data.append(self.post_data(timeline_id))
+        # print(f'Timeline Post Data Len: {len(timeline_post_data)}')
+        return timeline_post_data
 
-    def normalizing(self):
-        timeline = self.timeline_posts()
-        normalizing = []
-        for post in timeline:
-            normalizing.append(pd.json_normalize(post['data']))
-        return normalizing
+    def timeline_post_df(self):
+        timeline_post_data = self.timeline_post_data()
+        df = pd.DataFrame(timeline_post_data)
+        df.to_csv('./DataCSVs/TimelinePosts.csv')
+        pass
 
-    def timeline(self):
-        timeline = pd.DataFrame()
-        normalizing = self.normalizing()
-        for df in normalizing:
-            timeline.append(df, ignore_index=True)
-        timeline.to_csv()
+t = Timeline(consumer_key, consumer_secret, access_token, access_token_secret)
+# user_id = t.user_id() # returns class int
+# post_d = t.post_data(1307016538227200004) # returns class dict
+# u_timeline = t.user_timeline() # returns class list  aka list of lists of dicts
+# u_timeline_ids = t.user_timeline_ids() # returns list
+# t_post_data = t.timeline_post_data() # returns list of dicts
+df = t.timeline_post_df()
+
+

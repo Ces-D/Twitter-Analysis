@@ -1,10 +1,7 @@
 .vscode
 twitter_env
 secrets.py
-
 __pycache__
 
-Account_PostsID.csv
-Post_Data.json
-Cleaned_data.csv
 Followers.csv
+TimelinePosts.csv
