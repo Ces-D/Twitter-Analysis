@@ -48,7 +48,7 @@ class Followers:
         # print(followers_data[:10])
         return followers_data
 
-    def data_frame(self):
+    def followers_df(self):
         followers_lookup = self.followers_lookup()
         df = pd.DataFrame(followers_lookup)
         df.to_csv('./DataCSVs/Followers.csv')
@@ -58,7 +58,7 @@ f = Followers(consumer_key, consumer_secret, access_token, access_token_secret)
 # f_id = f.followers_ids() # returns class list
 # id_lookup = f.id_lookup('82270672') # returns class dict
 # f_lookup = f.followers_lookup() # returns list of dicts
-df = f.data_frame()
+df = f.followers_df()
 
 # Question?
 
