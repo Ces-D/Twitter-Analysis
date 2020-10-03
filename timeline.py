@@ -4,7 +4,7 @@ import json
 import time
 import pandas as pd
 import itertools
-from secrets import *
+from secrets import consumer_key, consumer_secret, access_token, access_token_secret
 
 
 class Timeline:
@@ -54,9 +54,12 @@ class Timeline:
         # print(f'Initial Request Type: {type(i_request.json())}')
         user_timeline.append(i_request.json())
         max_id = user_timeline[-1][-1].get('id') - 1
-        for i in range(2): # change to larger for more rounds 
+        for i in range(6): # change to larger for more rounds 
+            loop+=1
+            if loop%4.5==0: # if request count is 900 sleep 15mins
+                time.sleep(900)
             params={
-                'count':2, # change to 200 in prod
+                'count':200, # change to 200 in prod
                 'include_rts':1,
                 'max_id': max_id,
             }
@@ -81,7 +84,11 @@ class Timeline:
     def timeline_post_data(self):
         user_timeline_ids = self.user_timeline_ids()
         timeline_post_data = []
+        loop = 0
         for timeline_id in user_timeline_ids:
+            loop+=1
+            if loop%300==0: # if request count is 300 sleep 15mins
+                time.sleep(900)
             timeline_post_data.append(self.post_data(timeline_id))
         # print(f'Timeline Post Data Len: {len(timeline_post_data)}')
         return timeline_post_data

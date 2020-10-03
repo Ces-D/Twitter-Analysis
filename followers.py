@@ -2,9 +2,8 @@ import requests
 from requests_oauthlib import OAuth1Session
 import json
 import time
-import csv
 import pandas as pd
-from secrets import *
+from secrets import consumer_key, consumer_secret, access_token, access_token_secret
 
 class Followers:
     def __init__(self, consumer_key, consumer_secret, access_token,
@@ -21,6 +20,7 @@ class Followers:
         url = 'https://api.twitter.com/1.1/followers/ids.json'
         request = self.authenticate.get(url, params={'count':5000})
         # print(type(request.json().get('ids')))
+        # print(request.json().get('ids'))
         return request.json().get('ids')
 
     def id_lookup(self, follower_id):
@@ -30,7 +30,9 @@ class Followers:
             'user.fields': 'created_at,description,location,url,public_metrics',
             }
         request = self.authenticate.get(url, params=params)
-        # print(request.json().get('data'))
+        
+            
+        print(request.json().get('data'))
         # print(type(request.json().get('data')))
         return request.json().get('data')
 
@@ -41,7 +43,7 @@ class Followers:
         for follower_id in followers_ids: # remove [:10] when looking for all
             print(f'Follower ID: {follower_id}')
             lookup_count+=1
-            if lookup_count %300 == 0:
+            if lookup_count %900 == 0: # if 300 requests sleep 15mins
                 time.sleep(900)
             followers_data.append(self.id_lookup(follower_id))
         # print(len(followers_data))
